@@ -1,50 +1,87 @@
 import streamlit as st
-import pandas as pd
+import json
+from datetime import datetime
+import os
 
-st.title("My Habit Tracker")
+st.set_page_config(page_title="Life Tracker", layout="centered")
 
-# Initialize storage
-if "habits" not in st.session_state:
-    st.session_state.habits = []
+# ---------- HEADER ----------
+today = datetime.now().strftime("%A")
+date = datetime.now().strftime("%d %B %Y")
 
-# Add habit input
-habit = st.text_input("Enter a habit:")
-if st.button("Add Habit"):
-    if habit.strip():  # avoid empty input
-        st.session_state.habits.append({"Habit": habit})
-        st.success(f"Added habit: {habit}")
+col1, col2 = st.columns([8, 4])
 
-st.subheader("Your Habits")
+with col1:
+    st.title("📌 Life Tracker")
 
-# Show only if habits exist
-if st.session_state.habits:
-    df = pd.DataFrame(st.session_state.habits)
+with col2:
+    st.write("")  # spacing
+    st.write("")
+    st.markdown(f"**{today}**")
+    st.markdown(date)
 
-    # Add Serial Numbers starting from 1
-    df.index = df.index + 1
-    df.reset_index(inplace=True)
-    df.rename(columns={"index": "S.No"}, inplace=True)
+st.divider()
 
-    # Display table with checkboxes
-    st.write("Tick when completed:")
+FILE = "tasks.json"
 
-    remove_list = []  # store completed habits
+# ---------- LOAD TASKS ----------
+def load_tasks():
+    if os.path.exists(FILE):
+        with open(FILE, "r") as f:
+            return json.load(f)
+    return []
 
-    for i, row in df.iterrows():
-        col1, col2, col3 = st.columns([1,5,1])
-        col1.write(row["S.No"])
-        col2.write(row["Habit"])
-        done = col3.checkbox("Done", key=f"done_{row['S.No']}")
+# ---------- SAVE TASKS ----------
+def save_tasks(tasks):
+    with open(FILE, "w") as f:
+        json.dump(tasks, f)
+
+# ---------- STATE ----------
+if "tasks" not in st.session_state:
+    st.session_state.tasks = load_tasks()
+
+
+# ---------- ADD TASK ----------
+with st.form("task_form", clear_on_submit=True):
+    task = st.text_input("➕ Add new task")
+    add = st.form_submit_button("Add Task")
+
+    if add:
+        if task.strip():
+            st.session_state.tasks.append(task.strip())
+            save_tasks(st.session_state.tasks)
+            st.rerun()
+        else:
+            st.warning("Task cannot be empty")
+
+# ---------- TASK LIST ----------
+st.subheader("📋 Today's Tasks")
+st.caption("Tick when completed:")
+
+if not st.session_state.tasks:
+    st.info("No tasks yet")
+else:
+    for i, task in enumerate(st.session_state.tasks.copy()):
+
+        col1, col2 = st.columns([8, 2])
+
+        with col1:
+            st.markdown(f"**{task}**")
+
+        with col2:
+            done = st.checkbox("Done", key=f"done_{i}")
 
         if done:
-            remove_list.append(row["Habit"])
+            st.session_state.tasks.remove(task)
+            save_tasks(st.session_state.tasks)
+            st.rerun()
 
-    # Remove checked habits
-    if remove_list:
-        for h in remove_list:
-            st.session_state.habits = [item for item in st.session_state.habits if item["Habit"] != h]
-        st.rerun()
-else:
-    st.info("No habits added yet.")
 
+st.divider()
+
+# ---------- CLEAR ALL ----------
+if st.button("🗑️ Clear All Tasks"):
+    st.session_state.tasks = []
+    save_tasks([])
+    st.rerun()
 

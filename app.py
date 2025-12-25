@@ -5,6 +5,8 @@ import os
 
 st.set_page_config(page_title="Life Tracker", layout="centered")
 
+FILE = "tasks.json"
+
 # ---------- HEADER ----------
 today = datetime.now().strftime("%A")
 date = datetime.now().strftime("%d %B %Y")
@@ -15,14 +17,12 @@ with col1:
     st.title("📌 Life Tracker")
 
 with col2:
-    st.write("")  # spacing
+    st.write("")
     st.write("")
     st.markdown(f"**{today}**")
-    st.markdown(date)
+    st.caption(date)
 
 st.divider()
-
-FILE = "tasks.json"
 
 # ---------- LOAD TASKS ----------
 def load_tasks():
@@ -34,12 +34,11 @@ def load_tasks():
 # ---------- SAVE TASKS ----------
 def save_tasks(tasks):
     with open(FILE, "w") as f:
-        json.dump(tasks, f)
+        json.dump(tasks, f, indent=2)
 
 # ---------- STATE ----------
 if "tasks" not in st.session_state:
     st.session_state.tasks = load_tasks()
-
 
 # ---------- ADD TASK ----------
 with st.form("task_form", clear_on_submit=True):
@@ -54,6 +53,15 @@ with st.form("task_form", clear_on_submit=True):
         else:
             st.warning("Task cannot be empty")
 
+# ---------- PROGRESS ----------
+total_tasks = len(st.session_state.tasks)
+
+if total_tasks > 0:
+    st.progress(0.0)
+    st.caption(f"{total_tasks} task(s) pending today")
+
+st.divider()
+
 # ---------- TASK LIST ----------
 st.subheader("📋 Today's Tasks")
 st.caption("Tick when completed:")
@@ -61,7 +69,7 @@ st.caption("Tick when completed:")
 if not st.session_state.tasks:
     st.info("No tasks yet")
 else:
-    for i, task in enumerate(st.session_state.tasks.copy()):
+    for task in st.session_state.tasks.copy():
 
         col1, col2 = st.columns([8, 2])
 
@@ -69,13 +77,12 @@ else:
             st.markdown(f"**{task}**")
 
         with col2:
-            done = st.checkbox("Done", key=f"done_{i}")
+            done = st.checkbox("Done", key=f"done_{task}")
 
         if done:
             st.session_state.tasks.remove(task)
             save_tasks(st.session_state.tasks)
             st.rerun()
-
 
 st.divider()
 
@@ -84,4 +91,3 @@ if st.button("🗑️ Clear All Tasks"):
     st.session_state.tasks = []
     save_tasks([])
     st.rerun()
-

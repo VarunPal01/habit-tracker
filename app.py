@@ -4,7 +4,8 @@ st.set_page_config(page_title="Life Tracker", layout="centered")
 
 st.markdown(
     """
-    <meta name="google-adsense-account" content="ca-pub-4781320335952524">
+    <meta name="google-site-verification" content="ABC123XYZ" />
+    
     """,
     unsafe_allow_html=True
 )

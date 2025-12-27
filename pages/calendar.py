@@ -145,3 +145,42 @@ if st.button("Add Event"):
         st.session_state.events.setdefault(key, []).append(event_text)
         save_events(st.session_state.events)
         st.rerun()
+
+
+
+
+
+
+
+ef calendar_page():
+    st.subheader("📅 Monthly Calendar")
+
+    now = datetime.now()
+    year, month = now.year, now.month
+    today_date = now.day
+
+    cal = calendar.monthcalendar(year, month)
+    month_name = now.strftime("%B %Y")
+
+    st.markdown(f"### {month_name}")
+
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    cols = st.columns(7)
+    for i in range(7):
+        cols[i].markdown(f"**{days[i]}**")
+
+    for week in cal:
+        cols = st.columns(7)
+        for i, day in enumerate(week):
+            if day == 0:
+                cols[i].write("")
+            elif day == today_date:
+                cols[i].markdown(
+                    f"<div style='padding:10px; border-radius:10px; background:#4CAF50; color:white; text-align:center'>{day}</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                cols[i].markdown(
+                    f"<div style='padding:10px; border-radius:10px; border:1px solid #ccc; text-align:center'>{day}</div>",
+                    unsafe_allow_html=True
+                )

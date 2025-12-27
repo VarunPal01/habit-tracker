@@ -152,7 +152,7 @@ if st.button("Add Event"):
 
 
 
-ef calendar_page():
+def calendar_page():
     st.subheader("📅 Monthly Calendar")
 
     now = datetime.now()

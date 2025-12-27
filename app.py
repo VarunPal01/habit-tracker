@@ -1,106 +1,159 @@
 import streamlit as st
+import json
+import os
+from datetime import datetime
+import calendar
 
+# ================== CONFIG ==================
 st.set_page_config(page_title="Life Tracker", layout="centered")
 
-st.markdown(
-    """
-    <meta name="google-site-verification" content="ABC123XYZ" />
-    
-    """,
-    unsafe_allow_html=True
+TASK_FILE = "tasks.json"
+VISION_FILE = "vision.json"
+
+# ================== STATE ==================
+if "page" not in st.session_state:
+    st.session_state.page = "Home"
+
+if "tasks" not in st.session_state:
+    if os.path.exists(TASK_FILE):
+        with open(TASK_FILE, "r") as f:
+            st.session_state.tasks = json.load(f)
+    else:
+        st.session_state.tasks = []
+
+if "vision" not in st.session_state:
+    if os.path.exists(VISION_FILE):
+        with open(VISION_FILE, "r") as f:
+            st.session_state.vision = json.load(f)
+    else:
+        st.session_state.vision = ""
+
+# ================== SIDEBAR ==================
+st.sidebar.title("🧠 Life Tracker")
+
+page = st.sidebar.radio(
+    "Navigate",
+    ["🏠 Home", "✅ To-Do", "📅 Calendar", "🎯 Vision Board"]
 )
 
+st.session_state.page = page
 
-import streamlit as st
-import json
-from datetime import datetime
-import os
+st.sidebar.divider()
+st.sidebar.caption("Built for focus & growth")
 
-st.set_page_config(page_title="Life Tracker", layout="centered")
-
-FILE = "tasks.json"
-
-# ---------- HEADER ----------
+# ================== HEADER ==================
 today = datetime.now().strftime("%A")
 date = datetime.now().strftime("%d %B %Y")
 
-col1, col2 = st.columns([8, 4])
-
+col1, col2 = st.columns([6, 2])
 with col1:
     st.title("📌 Life Tracker")
-
 with col2:
-    st.write("")
-    st.write("")
     st.markdown(f"**{today}**")
-    st.caption(date)
+    st.markdown(date)
 
 st.divider()
 
-# ---------- LOAD TASKS ----------
-def load_tasks():
-    if os.path.exists(FILE):
-        with open(FILE, "r") as f:
-            return json.load(f)
-    return []
+# ================== PAGES ==================
+def home_page():
+    st.subheader("🏠 Home")
+    st.markdown(
+        """
+        ### Welcome 👋  
+        This is your **personal productivity system**.
 
-# ---------- SAVE TASKS ----------
-def save_tasks(tasks):
-    with open(FILE, "w") as f:
-        json.dump(tasks, f, indent=2)
+        **Features**
+        - ✅ Daily task manager  
+        - 📅 Monthly calendar  
+        - 🎯 Vision board  
 
-# ---------- STATE ----------
-if "tasks" not in st.session_state:
-    st.session_state.tasks = load_tasks()
+        _Small steps daily → Big life changes_
+        """
+    )
 
-# ---------- ADD TASK ----------
-with st.form("task_form", clear_on_submit=True):
-    task = st.text_input("➕ Add new task")
-    add = st.form_submit_button("Add Task")
-
-    if add:
-        if task.strip():
+def todo_page():
+    st.subheader("✅ To-Do List")
+    with st.form("task_form", clear_on_submit=True):
+        task = st.text_input("➕ Add new task")
+        add = st.form_submit_button("Add")
+        if add and task.strip():
             st.session_state.tasks.append(task.strip())
-            save_tasks(st.session_state.tasks)
+            json.dump(st.session_state.tasks, open(TASK_FILE, "w"))
             st.rerun()
-        else:
-            st.warning("Task cannot be empty")
+            
 
-# ---------- PROGRESS ----------
-total_tasks = len(st.session_state.tasks)
+    st.divider()
+    if not st.session_state.tasks:
+        st.info("No tasks yet")
+    else:
+        for i, task in enumerate(st.session_state.tasks.copy()):
+            col1, col2 = st.columns([8, 2])
+            col1.write(task)
+            if col2.checkbox("Done", key=f"task_{i}_{task}"):
+                st.session_state.tasks.remove(task)
+                json.dump(st.session_state.tasks, open(TASK_FILE, "w"))
+                st.rerun()
+                st.divider()
 
-if total_tasks > 0:
-    st.progress(0.0)
-    st.caption(f"{total_tasks} task(s) pending today")
+def calendar_page():
+    st.subheader("📅 Monthly Calendar")
 
-st.divider()
+    now = datetime.now()
+    year, month = now.year, now.month
+    today_date = now.day
 
-# ---------- TASK LIST ----------
-st.subheader("📋 Today's Tasks")
-st.caption("Tick when completed:")
+    cal = calendar.monthcalendar(year, month)
+    month_name = now.strftime("%B %Y")
 
-if not st.session_state.tasks:
-    st.info("No tasks yet")
-else:
-    for task in st.session_state.tasks.copy():
+    st.markdown(f"### {month_name}")
 
-        col1, col2 = st.columns([8, 2])
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    cols = st.columns(7)
+    for i in range(7):
+        cols[i].markdown(f"**{days[i]}**")
 
-        with col1:
-            st.markdown(f"**{task}**")
+    for week in cal:
+        cols = st.columns(7)
+        for i, day in enumerate(week):
+            if day == 0:
+                cols[i].write("")
+            elif day == today_date:
+                cols[i].markdown(
+                    f"<div style='padding:10px; border-radius:10px; background:#4CAF50; color:white; text-align:center'>{day}</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                cols[i].markdown(
+                    f"<div style='padding:10px; border-radius:10px; border:1px solid #ccc; text-align:center'>{day}</div>",
+                    unsafe_allow_html=True
+                )
 
-        with col2:
-            done = st.checkbox("Done", key=f"done_{task}")
+def vision_page():
+    st.subheader("🎯 Vision Board")
 
-        if done:
-            st.session_state.tasks.remove(task)
-            save_tasks(st.session_state.tasks)
-            st.rerun()
+    vision = st.text_area(
+        "Write your goals / vision",
+        value=st.session_state.vision,
+        height=180
+    )
 
-st.divider()
+    if st.button("💾 Save Vision"):
+        st.session_state.vision = vision
+        with open(VISION_FILE, "w") as f:
+            json.dump(vision, f)
+        st.success("Vision saved")
 
-# ---------- CLEAR ALL ----------
-if st.button("🗑️ Clear All Tasks"):
-    st.session_state.tasks = []
-    save_tasks([])
-    st.rerun()
+    if st.session_state.vision:
+        st.divider()
+        st.markdown("### 🌟 Your Vision")
+        st.write(st.session_state.vision)
+
+# ================== ROUTER ==================
+if page.startswith("🏠"):
+    home_page()
+elif page.startswith("✅"):
+    todo_page()
+elif page.startswith("📅"):
+    calendar_page()
+elif page.startswith("🎯"):
+    vision_page()

@@ -1,4 +1,16 @@
 import streamlit as st
+
+st.set_page_config(page_title="Life Tracker", layout="centered")
+
+st.markdown(
+    """
+    <meta name="google-adsense-account" content="ca-pub-4781320335952524">
+    """,
+    unsafe_allow_html=True
+)
+
+
+import streamlit as st
 import json
 from datetime import datetime
 import os

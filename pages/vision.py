@@ -2,8 +2,6 @@ import streamlit as st
 import json
 import os
 
-st.set_page_config(page_title="Vision Board", layout="centered")
-
 VISION_FILE = "vision.txt"
 
 # ---------- LOAD VISION ----------

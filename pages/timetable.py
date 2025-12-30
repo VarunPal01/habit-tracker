@@ -1,8 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Smart Time Table Maker", layout="centered")
-
 # ---------------- MEMORY ----------------
 if "data" not in st.session_state:
     st.session_state.data = {

@@ -4,7 +4,12 @@ from datetime import datetime
 import os
 
 # ---------------- CONFIG ----------------
-st.set_page_config(page_title="Life Tracker", layout="centered")
+# app.py
+st.set_page_config(
+    page_title="Life Tracker",
+    layout="centered"
+)
+
 
 FILE = "tasks.json"
 

@@ -4,8 +4,6 @@ import json
 import os
 from datetime import date
 
-st.set_page_config(page_title="Monthly Calendar", layout="wide")
-
 FILE = "calendar_events.json"
 today = date.today()
 
@@ -24,7 +22,7 @@ if "events" not in st.session_state:
     st.session_state.events = load_events()
 
 # ---------- HEADER ----------
-st.title("🗓️ Calendar")
+st.title("📅 Calendar")
 st.caption("Montly Planner")
 
 # ---------- MONTH / YEAR ----------

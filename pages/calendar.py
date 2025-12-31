@@ -2,9 +2,9 @@ import streamlit as st
 import calendar
 import json
 import os
-import time
 from datetime import date, datetime
 
+st.set_page_config(page_title="Calendar", layout="centered")
 
 FILE = "calendar_events.json"
 today = date.today()
@@ -26,33 +26,9 @@ if "events" not in st.session_state:
 # ---------- HEADER ----------
 st.title("📅 Calendar")
 st.caption("Monthly Planner")
-
-# ---------- YEAR COUNTDOWN TIMER ----------
 st.divider()
-st.subheader("⏳ Year Countdown")
 
-timer_placeholder = st.empty()
-
-def year_countdown():
-    now = datetime.now()
-    end_of_year = datetime(now.year, 12, 31, 23, 59, 59)
-    diff = end_of_year - now
-
-    if diff.total_seconds() <= 0:
-        return "🎉 Happy New Year!"
-
-    days = diff.days
-    hours, rem = divmod(diff.seconds, 3600)
-    minutes, seconds = divmod(rem, 60)
-
-    return f"🕒 {days} Days : {hours:02d} Hours : {minutes:02d} Minutes : {seconds:02d} Seconds"
-
-timer_placeholder.info(year_countdown())
-
-time.sleep(1)
-st.rerun()
-
-# ---------- MONTH / YEAR ----------
+# ---------- MONTH / YEAR SELECTOR ----------
 col1, col2 = st.columns(2)
 
 with col1:
@@ -83,7 +59,6 @@ cal = calendar.monthcalendar(year, month)
 
 for week in cal:
     week_cols = st.columns(7)
-
     for i, day in enumerate(week):
         with week_cols[i]:
             if day == 0:
@@ -106,13 +81,32 @@ for week in cal:
                 for e in events:
                     st.write(f"• {e}")
 
+# ---------- YEAR COUNTDOWN ----------
+st.divider()
+st.subheader("⏳ Year Countdown")
+
+now = datetime.now()
+end_of_year = datetime(now.year, 12, 31, 23, 59, 59)
+diff = end_of_year - now
+
+if diff.total_seconds() > 0:
+    days = diff.days
+    hours, rem = divmod(diff.seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    st.info(
+        f"🕒 {days} Days : {hours:02d} Hours : {minutes:02d} Minutes : {seconds:02d} Seconds"
+    )
+else:
+    st.success("🎉 Happy New Year!")
+
 # ---------- ADD EVENT ----------
 st.divider()
 st.subheader("➕ Add Event")
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with col1:
+with c1:
     event_day = st.number_input(
         "Day",
         min_value=1,
@@ -120,10 +114,10 @@ with col1:
         value=today.day,
     )
 
-with col2:
+with c2:
     event_text = st.text_input("Event")
 
-with col3:
+with c3:
     add_btn = st.button("Add")
 
 if add_btn:

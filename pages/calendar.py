@@ -2,7 +2,9 @@ import streamlit as st
 import calendar
 import json
 import os
-from datetime import date
+import time
+from datetime import date, datetime
+
 
 FILE = "calendar_events.json"
 today = date.today()
@@ -23,7 +25,32 @@ if "events" not in st.session_state:
 
 # ---------- HEADER ----------
 st.title("📅 Calendar")
-st.caption("Montly Planner")
+st.caption("Monthly Planner")
+
+# ---------- YEAR COUNTDOWN TIMER ----------
+st.divider()
+st.subheader("⏳ Year Countdown")
+
+timer_placeholder = st.empty()
+
+def year_countdown():
+    now = datetime.now()
+    end_of_year = datetime(now.year, 12, 31, 23, 59, 59)
+    diff = end_of_year - now
+
+    if diff.total_seconds() <= 0:
+        return "🎉 Happy New Year!"
+
+    days = diff.days
+    hours, rem = divmod(diff.seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    return f"🕒 {days} Days : {hours:02d} Hours : {minutes:02d} Minutes : {seconds:02d} Seconds"
+
+timer_placeholder.info(year_countdown())
+
+time.sleep(1)
+st.rerun()
 
 # ---------- MONTH / YEAR ----------
 col1, col2 = st.columns(2)
@@ -71,7 +98,6 @@ for week in cal:
                 date_key = f"{year}-{month:02d}-{day:02d}"
                 events = st.session_state.events.get(date_key, [])
 
-                # Highlight today
                 if is_today:
                     st.success(f"**{day}**")
                 else:

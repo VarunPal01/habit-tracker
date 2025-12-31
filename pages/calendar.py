@@ -93,7 +93,7 @@ st.divider()
 st.subheader("⏳ Year Countdown")
 
 now = datetime.now()
-end_of_year = datetime(now.year, 12, 31, 23, 59, 59)
+end_of_year = datetime(year, 12, 31, 23, 59, 59)
 diff_seconds = int((end_of_year - now).total_seconds())
 
 if diff_seconds > 0:

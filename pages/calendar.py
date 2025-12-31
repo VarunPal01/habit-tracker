@@ -3,6 +3,8 @@ import calendar
 import json
 import os
 from datetime import date, datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo  # Python 3.9+
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 st_autorefresh(interval=1000, key="countdown_refresh")
@@ -38,8 +40,10 @@ st.divider()
 # ---------------- MONTH / YEAR ----------------
 col1, col2 = st.columns(2)
 
+
 with col1:
-    year = st.selectbox(
+     LOCAL_TZ = ZoneInfo("Asia/Kolkata")  # Replace with your timezone, e.g. "Asia/Dubai"
+     year = st.selectbox(
         "Year",
         list(range(2023, 2031)),
         index=list(range(2023, 2031)).index(today.year),
@@ -92,8 +96,9 @@ for week in cal:
 st.divider()
 st.subheader("⏳ Year Countdown")
 
-now = datetime.now()
-end_of_year = datetime(year, 12, 31, 23, 59, 59)
+now = datetime.now(LOCAL_TZ)
+end_of_year = datetime(year, 12, 31, 23, 59, 59, tzinfo=LOCAL_TZ)
+
 diff_seconds = int((end_of_year - now).total_seconds())
 
 if diff_seconds > 0:
@@ -104,8 +109,11 @@ if diff_seconds > 0:
     st.info(
         f"🕒 {days} Days : {hours:02d} Hours : {minutes:02d} Minutes : {seconds:02d} Seconds"
     )
-else:
+elif year == now.year:
     st.success("🎉 Happy New Year!")
+else:
+    st.warning("⚠️ Selected year has already ended")
+
 
 # ---------------- ADD EVENT ----------------
 st.divider()

@@ -1,86 +1,121 @@
 import streamlit as st
-import json
-import os
+import sqlite3
 from datetime import datetime
+import pandas as pd
 
-# ---------- File to store data ----------
-FILE = "budget_data.json"
-
-# ---------- Load / Save Functions ----------
-def load_data():
-    if os.path.exists(FILE):
-        with open(FILE, "r") as f:
-            return json.load(f)
-    return {"income": [], "expenses": []}
-
-def save_data(data):
-    with open(FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-# ---------- Main App ----------
+# ------------------ Page Config ------------------
 st.set_page_config(page_title="Budget Tracker", layout="centered")
 st.title("💰 Budget Tracker")
 
-data = load_data()
+# ------------------ Database Connection ------------------
+conn = sqlite3.connect("budget.db", check_same_thread=False)
+cursor = conn.cursor()
 
-# ---------- Add Income ----------
+# ------------------ Create Tables ------------------
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS income (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL,
+    source TEXT,
+    date TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL,
+    category TEXT,
+    date TEXT
+)
+""")
+conn.commit()
+
+# ------------------ Add Income ------------------
 with st.expander("➕ Add Income"):
     income_amount = st.number_input("Income Amount", min_value=0.0, step=1.0, format="%.2f")
     income_source = st.text_input("Income Source")
+
     if st.button("Add Income"):
-        if income_amount > 0 and income_source:
-            data["income"].append({
-                "amount": income_amount,
-                "source": income_source,
-                "date": str(datetime.now())
-            })
-            save_data(data)
+        if income_amount > 0 and income_source.strip():
+            cursor.execute(
+                "INSERT INTO income (amount, source, date) VALUES (?, ?, ?)",
+                (income_amount, income_source, str(datetime.now()))
+            )
+            conn.commit()
             st.success("Income added successfully!")
         else:
-            st.warning("Enter a valid amount and source!")
+            st.warning("Please enter valid income details.")
 
-# ---------- Add Expense ----------
+# ------------------ Add Expense ------------------
 with st.expander("➕ Add Expense"):
-    expense_amount = st.number_input("Expense Amount", min_value=0.0, step=1.0, format="%.2f", key="exp_amt")
+    expense_amount = st.number_input(
+        "Expense Amount", min_value=0.0, step=1.0, format="%.2f", key="exp_amt"
+    )
     expense_category = st.text_input("Expense Category", key="exp_cat")
+
     if st.button("Add Expense"):
-        if expense_amount > 0 and expense_category:
-            data["expenses"].append({
-                "amount": expense_amount,
-                "category": expense_category,
-                "date": str(datetime.now())
-            })
-            save_data(data)
+        if expense_amount > 0 and expense_category.strip():
+            cursor.execute(
+                "INSERT INTO expenses (amount, category, date) VALUES (?, ?, ?)",
+                (expense_amount, expense_category, str(datetime.now()))
+            )
+            conn.commit()
             st.success("Expense added successfully!")
         else:
-            st.warning("Enter a valid amount and category!")
+            st.warning("Please enter valid expense details.")
 
-# ---------- View Balance ----------
+# ------------------ Current Balance ------------------
 st.subheader("💵 Current Balance")
-total_income = sum(item["amount"] for item in data["income"])
-total_expense = sum(item["amount"] for item in data["expenses"])
+
+cursor.execute("SELECT SUM(amount) FROM income")
+total_income = cursor.fetchone()[0] or 0
+
+cursor.execute("SELECT SUM(amount) FROM expenses")
+total_expense = cursor.fetchone()[0] or 0
+
 balance = total_income - total_expense
 
 st.write(f"**Total Income:** ₹{total_income}")
 st.write(f"**Total Expenses:** ₹{total_expense}")
 st.write(f"**Balance:** ₹{balance}")
 
-# ---------- Expense Summary ----------
+# ------------------ Expense Summary ------------------
 st.subheader("📊 Expense Summary by Category")
-categories = {}
-for expense in data["expenses"]:
-    cat = expense["category"]
-    categories[cat] = categories.get(cat, 0) + expense["amount"]
 
-if categories:
-    for cat, amt in categories.items():
+cursor.execute("""
+SELECT category, SUM(amount)
+FROM expenses
+GROUP BY category
+""")
+
+rows = cursor.fetchall()
+
+if rows:
+    for cat, amt in rows:
         st.write(f"{cat}: ₹{amt}")
 else:
     st.write("No expenses yet!")
 
-# ---------- Show All Transactions ----------
+# ------------------ Show All Transactions ------------------
 st.subheader("📝 All Transactions")
-st.write("**Income:**")
-st.dataframe(data["income"])
-st.write("**Expenses:**")
-st.dataframe(data["expenses"])
+
+cursor.execute("SELECT amount, source, date FROM income ORDER BY date DESC")
+income_data = cursor.fetchall()
+
+cursor.execute("SELECT amount, category, date FROM expenses ORDER BY date DESC")
+expense_data = cursor.fetchall()
+
+st.write("**Income**")
+if income_data:
+    df_income = pd.DataFrame(income_data, columns=["Amount", "Source", "Date"])
+    st.dataframe(df_income, use_container_width=True)
+else:
+    st.write("No income records.")
+
+st.write("**Expenses**")
+if expense_data:
+    df_expense = pd.DataFrame(expense_data, columns=["Amount", "Category", "Date"])
+    st.dataframe(df_expense, use_container_width=True)
+else:
+    st.write("No expense records.")

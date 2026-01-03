@@ -1,24 +1,7 @@
-import sqlite3
+from supabase import create_client
+import os
 
-conn = sqlite3.connect("budget.db", check_same_thread=False)
-cursor = conn.cursor()
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS income (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    amount REAL,
-    source TEXT,
-    date TEXT
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS expenses (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    amount REAL,
-    category TEXT,
-    date TEXT
-)
-""")
-
-conn.commit()
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)

@@ -2,3 +2,7 @@ streamlit
 streamlit
 matplotlib
 streamlit-autorefresh
+
+streamlit
+supabase
+python-dotenv

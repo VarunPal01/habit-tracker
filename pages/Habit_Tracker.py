@@ -1,9 +1,9 @@
 import streamlit as st
-import sqlite3
 from datetime import date, timedelta
 import matplotlib.pyplot as plt
+from database import supabase
 
-# ---------------- PAGE ----------------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="Habit Tracker Pro",
     page_icon="🔥",
@@ -12,28 +12,7 @@ st.set_page_config(
 
 today = date.today()
 
-# ---------------- DATABASE ----------------
-conn = sqlite3.connect("habits.db", check_same_thread=False)
-cur = conn.cursor()
-
-cur.execute("""
-CREATE TABLE IF NOT EXISTS habits (
-    name TEXT PRIMARY KEY
-)
-""")
-
-cur.execute("""
-CREATE TABLE IF NOT EXISTS habit_logs (
-    habit TEXT,
-    day TEXT,
-    completed INTEGER,
-    PRIMARY KEY (habit, day)
-)
-""")
-
-conn.commit()
-
-# ---------------- STYLE ----------------
+# ---------------- STYLES ----------------
 st.markdown("""
 <style>
 body { background-color: #020617; }
@@ -45,30 +24,26 @@ hr { border: none; border-top: 1px solid #1e293b; margin: 24px 0; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- HELPERS ----------------
-def format_date(d):
-    return d.strftime("%d/%m/%Y")
-
+# ---------------- HELPERS (SUPABASE) ----------------
 def get_habits():
-    cur.execute("SELECT name FROM habits")
-    return [h[0] for h in cur.fetchall()]
+    res = supabase.table("habits").select("name").execute()
+    return [h["name"] for h in res.data]
 
 def get_log(habit, d):
-    cur.execute(
-        "SELECT completed FROM habit_logs WHERE habit=? AND day=?",
-        (habit, str(d))
-    )
-    row = cur.fetchone()
-    return bool(row[0]) if row else False
+    res = supabase.table("habit_logs") \
+        .select("completed") \
+        .eq("habit", habit) \
+        .eq("day", str(d)) \
+        .execute()
+
+    return bool(res.data[0]["completed"]) if res.data else False
 
 def set_log(habit, d, value):
-    cur.execute("""
-    INSERT INTO habit_logs (habit, day, completed)
-    VALUES (?, ?, ?)
-    ON CONFLICT(habit, day)
-    DO UPDATE SET completed=excluded.completed
-    """, (habit, str(d), int(value)))
-    conn.commit()
+    supabase.table("habit_logs").upsert({
+        "habit": habit,
+        "day": str(d),
+        "completed": int(value)
+    }).execute()
 
 def get_streak(habit):
     s = 0
@@ -93,12 +68,13 @@ with c1:
 with c2:
     if st.button("Add"):
         if new_habit:
-            cur.execute("INSERT OR IGNORE INTO habits VALUES (?)", (new_habit,))
-            conn.commit()
+            supabase.table("habits").insert({
+                "name": new_habit
+            }).execute()
             st.rerun()
 
 # ---------------- TODAY ----------------
-st.markdown(f"### 📅 Today — {format_date(today)}")
+st.markdown(f"### 📅 Today — {today.strftime('%d/%m/%Y')}")
 
 habits = get_habits()
 completed_today = 0
@@ -117,9 +93,8 @@ for habit in habits:
     c3.markdown(f"<div class='streak'>🔥 {get_streak(habit)} day(s)</div>", unsafe_allow_html=True)
 
     if c4.button("❌", key=f"del_{habit}"):
-        cur.execute("DELETE FROM habits WHERE name=?", (habit,))
-        cur.execute("DELETE FROM habit_logs WHERE habit=?", (habit,))
-        conn.commit()
+        supabase.table("habits").delete().eq("name", habit).execute()
+        supabase.table("habit_logs").delete().eq("habit", habit).execute()
         st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)

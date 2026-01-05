@@ -88,14 +88,22 @@ for habit in habits:
     st.markdown("<div class='habit-row'>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns([5, 2, 2, 1])
 
-    c1.markdown(f"<div class='habit-name'>{habit}</div>", unsafe_allow_html=True)
-  value = c2.checkbox(
+   c1.markdown(
+    f"<div class='habit-name'>{habit}</div>",
+    unsafe_allow_html=True
+)
+
+value = c2.checkbox(
     label="",
     value=checked,
     key=f"done_{habit}_{today.isoformat()}"
 )
 
-    c3.markdown(f"<div class='streak'>🔥 {get_streak(habit)} day(s)</div>", unsafe_allow_html=True)
+c3.markdown(
+    f"<div class='streak'>🔥 {get_streak(habit)} day(s)</div>",
+    unsafe_allow_html=True
+)
+
 
     if c4.button("❌", key=f"del_{habit}"):
         supabase.table("habits").delete().eq("name", habit).execute()

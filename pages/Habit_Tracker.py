@@ -27,7 +27,7 @@ hr { border: none; border-top: 1px solid #1e293b; margin: 24px 0; }
 # ---------------- HELPERS (SUPABASE) ----------------
 def get_habits():
     res = supabase.table("habits").select("name").execute()
-    return [h["name"] for h in res.data]
+    return [h["name"] for h in res.data] if res.data else []
 
 def get_log(habit, d):
     res = supabase.table("habit_logs") \
@@ -35,7 +35,6 @@ def get_log(habit, d):
         .eq("habit", habit) \
         .eq("day", str(d)) \
         .execute()
-
     return bool(res.data[0]["completed"]) if res.data else False
 
 def set_log(habit, d, value):
@@ -46,19 +45,19 @@ def set_log(habit, d, value):
     }).execute()
 
 def get_streak(habit):
-    s = 0
+    streak = 0
     d = today
-    while True:
-        if get_log(habit, d):
-            s += 1
-            d -= timedelta(days=1)
-        else:
-            break
-    return s
+    while get_log(habit, d):
+        streak += 1
+        d -= timedelta(days=1)
+    return streak
 
 # ---------------- HEADER ----------------
 st.markdown("## 🔥 Habit Tracker Pro")
-st.markdown("<div class='sub'>Track habits • Build streaks • Stay consistent</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div class='sub'>Track habits • Build streaks • Stay consistent</div>",
+    unsafe_allow_html=True
+)
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # ---------------- ADD HABIT ----------------
@@ -67,10 +66,8 @@ with c1:
     new_habit = st.text_input("Add habit", label_visibility="collapsed")
 with c2:
     if st.button("Add"):
-        if new_habit:
-            supabase.table("habits").insert({
-                "name": new_habit
-            }).execute()
+        if new_habit.strip():
+            supabase.table("habits").insert({"name": new_habit.strip()}).execute()
             st.rerun()
 
 # ---------------- TODAY ----------------
@@ -86,26 +83,25 @@ for habit in habits:
     checked = get_log(habit, today)
 
     st.markdown("<div class='habit-row'>", unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns([5, 2, 2, 1])
+    col1, col2, col3, col4 = st.columns([5, 2, 2, 1])
 
-   c1.markdown(
-    f"<div class='habit-name'>{habit}</div>",
-    unsafe_allow_html=True
-)
+    col1.markdown(
+        f"<div class='habit-name'>{habit}</div>",
+        unsafe_allow_html=True
+    )
 
-value = c2.checkbox(
-    label="",
-    value=checked,
-    key=f"done_{habit}_{today.isoformat()}"
-)
+    value = col2.checkbox(
+        label="",
+        value=checked,
+        key=f"done_{habit}_{today.isoformat()}"
+    )
 
-c3.markdown(
-    f"<div class='streak'>🔥 {get_streak(habit)} day(s)</div>",
-    unsafe_allow_html=True
-)
+    col3.markdown(
+        f"<div class='streak'>🔥 {get_streak(habit)} day(s)</div>",
+        unsafe_allow_html=True
+    )
 
-
-    if c4.button("❌", key=f"del_{habit}"):
+    if col4.button("❌", key=f"del_{habit}"):
         supabase.table("habits").delete().eq("name", habit).execute()
         supabase.table("habit_logs").delete().eq("habit", habit).execute()
         st.rerun()
@@ -120,8 +116,9 @@ c3.markdown(
 if habits:
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("### 📊 Daily Progress")
-    st.progress(completed_today / len(habits))
-    st.write(f"**{int((completed_today / len(habits)) * 100)}% completed**")
+    progress = completed_today / len(habits)
+    st.progress(progress)
+    st.write(f"**{int(progress * 100)}% completed**")
 
 # ---------------- LAST 7 DAYS ----------------
 st.markdown("<hr>", unsafe_allow_html=True)

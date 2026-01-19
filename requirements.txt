@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 streamlit
 pandas
 matplotlib
 streamlit-autorefresh
 supabase
 python-dateutil
+=======
+streamlit
+streamlit
+matplotlib
+streamlit-autorefresh
+
+streamlit
+supabase
+python-dotenv
+>>>>>>> 4eae2f52fcf32fecbcced50f5c4f6d9c231e3061

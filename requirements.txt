@@ -1,0 +1,6 @@
+streamlit
+pandas
+matplotlib
+streamlit-autorefresh
+supabase
+python-dateutil

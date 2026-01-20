@@ -1,5 +1,5 @@
 import streamlit as st
-<<<<<<< HEAD
+#<<<<<<< HEAD
 from supabase import create_client
 
 # ---------------- PAGE CONFIG ----------------
@@ -107,7 +107,7 @@ st.page_link("pages/Meals.py", label="🍽️ Meal Tracker")
 st.page_link("pages/Budget.py", label="💰 Budget Tracker")
 st.page_link("pages/Calendar.py", label="📅 Calendar")
 st.page_link("pages/Vision.py", label="🌈 Vision Board")
-=======
+#=======
 import json
 from datetime import datetime
 import os
@@ -210,4 +210,4 @@ if st.button("🗑️ Clear All Tasks"):
     save_tasks([])
     st.success("All tasks cleared")
     st.rerun()
->>>>>>> 4eae2f52fcf32fecbcced50f5c4f6d9c231e3061
+#>>>>>>> 4eae2f52fcf32fecbcced50f5c4f6d9c231e3061

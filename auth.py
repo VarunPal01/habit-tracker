@@ -47,10 +47,12 @@ with tab2:
                 "password": password
             })
 
-            if res.user:
-                st.success("Account created. Please check your email to confirm.")
+            st.write(res)  # <-- TEMP DEBUG
+
+            if res.user is not None:
+                st.success("Account created. Check your email.")
             else:
-                st.error(f"Registration failed: {res}")
+                st.error("Registration failed. No user returned.")
 
         except Exception as e:
-            st.error(f"Registration failed: {e}")
+            st.error(f"Registration exception: {str(e)}")

@@ -35,12 +35,22 @@ with tab1:
         except:
             st.error("Invalid credentials")
 
+
 with tab2:
     email = st.text_input("Email", key="r1")
     password = st.text_input("Password", type="password", key="r2")
+
     if st.button("Create account"):
-        supabase.auth.sign_up({
-            "email": email,
-            "password": password
-        })
-        st.success("Account created. Login now.")
+        try:
+            res = supabase.auth.sign_up({
+                "email": email,
+                "password": password
+            })
+
+            if res.user:
+                st.success("Account created. Please check your email to confirm.")
+            else:
+                st.error(f"Registration failed: {res}")
+
+        except Exception as e:
+            st.error(f"Registration failed: {e}")

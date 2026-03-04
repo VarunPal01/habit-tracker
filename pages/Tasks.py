@@ -43,4 +43,4 @@ else:
         col1.write(t["task"])
         if col2.button("Done", key=t["id"]):
             supabase.table("tasks").delete().eq("id", t["id"]).execute()
-            st.rerun(
+            st.rerun()

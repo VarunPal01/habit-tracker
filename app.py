@@ -101,9 +101,10 @@ st.divider()
 # ---------------- NAVIGATION ----------------
 st.subheader("📍 Your Tools")
 
-st.page_link("pages/Habits.py", label="🔥 Habit Tracker")
-st.page_link("pages/Tasks.py", label="📌 Tasks")
-st.page_link("pages/Meals.py", label="🍽️ Meal Tracker")
+
 st.page_link("pages/Budget.py", label="💰 Budget Tracker")
 st.page_link("pages/Calendar.py", label="📅 Calendar")
-st.page_link("pages/Vision.py", label="🌈 Vision Board")
+st.page_link("pages/Meals.py", label="🍽️ Meal Tracker")
+st.page_link("pages/Habits.py", label="🔥 Habit Tracker")
+st.page_link("pages/Tasks.py", label="📌 Tasks")
+st.page_link("pages/Vision.py", label="🌈 Vision Board");

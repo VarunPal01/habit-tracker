@@ -31,7 +31,7 @@ with tab1:
                 "password": password
             })
             st.session_state.user_id = res.user.id
-            st.switch_page("pages/Habits.py")
+            st.success("Logged in successfully")
         except:
             st.error("Invalid credentials")
 
@@ -42,17 +42,17 @@ with tab2:
 
     if st.button("Create account"):
         try:
-            res = supabase.auth.sign_up({
+            response = supabase.auth.sign_up({
                 "email": email,
                 "password": password
             })
 
-            st.write(res)  # <-- TEMP DEBUG
+            st.write("FULL RESPONSE:",response)  # <-- TEMP DEBUG
 
-            if res.user is not None:
-                st.success("Account created. Check your email.")
+            if response.user:
+                st.success("Registered successfully")
             else:
                 st.error("Registration failed. No user returned.")
 
         except Exception as e:
-            st.error(f"Registration exception: {str(e)}")
+            st.error(f"Error occurred: {e}")

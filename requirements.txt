@@ -1,3 +1,4 @@
 streamlit
 supabase
 python-dotenv
+matplotlib

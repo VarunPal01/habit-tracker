@@ -1,5 +1,5 @@
 import streamlit as st
-from database.supabase_client import restore_session
+from database.supabase_client import get_supabase
 from utils.auth_guard import require_login
 
 st.set_page_config(
@@ -8,7 +8,7 @@ st.set_page_config(
     layout="centered"
 )
 
-supabase = restore_session()
+supabase=get_supabase()
 require_login()
 
 user_id = st.session_state.user_id
